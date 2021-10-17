@@ -1,0 +1,20 @@
+---
+title: "p8105_hw3_raj2152"
+author: "Rachelle Juan"
+date: "10/20/2021"
+output: github_document
+---
+
+```{r, echo = FALSE, message = FALSE}
+library(tidyverse)
+library(p8105.datasets)
+```
+
+## Problem 1
+
+### Load the Instacart data for `p8105.datasets`
+```{r}
+data("instacart")
+```
+
+The Instacart dataset has `r nrow(instacart)` observations and `r ncol(instacart)` variables. Each row or observation corresponds to a single product within an Instacart order, therefore, one order may map to several products (i.e., there is a one-to-many relationship between orders and products). The variables provide details on each order, including things like `order_id` and `product_id` as well as the `user_id` of who placed the order. The variables also include information on where each product is located, for example: `aisle` and `department`.
