@@ -8,6 +8,22 @@ output: github_document
 ```{r, echo = FALSE, message = FALSE}
 library(tidyverse)
 library(p8105.datasets)
+
+knitr::opts_chunk$set(
+  fig.width = 6,
+  fig.asp = .6,
+  out.width = "90%"
+)
+
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+
+scale_colour_discrete = scale_colour_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
 ```
 
 ## Problem 1
@@ -28,7 +44,7 @@ aisle_df =
   rename(quantity = n)
 ```
 
-
+### Plotting Number of Items Ordered by Aisle, where number of items is greater than 10,000
 * This plot shows the number of items ordered in each aisle, limiting this to aisles with more than 10000 items ordered. The plot is in descending order based on quantity. 
 ```{r}
 aisle_df %>% 
@@ -41,7 +57,7 @@ aisle_df %>%
   )
 ```
 
-
+### Popular Items by Aisles
 * Make a table showing the three most popular items in each of the aisles “baking ingredients”, “dog food care”, and “packaged vegetables fruits”. Include the number of times each item is ordered in your table.
 ```{r}
 target = c("baking ingredients", "dog food care", "packaged vegetables fruits")
@@ -57,8 +73,8 @@ instacart %>%
   knitr::kable()
 ```
 
-
-* Make a table showing the mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week; format this table for human readers (i.e. produce a 2 x 7 table).
+### Pink Lady Apples and Coffee Ice Cream
+* Make a table showing the mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week; format this table for human readers (i.e. produce a 2 x 7 table). 
 ```{r}
 instacart %>% 
   filter(product_name %in% c("Pink Lady Apples", "Coffee Ice Cream")) %>% 
@@ -73,4 +89,68 @@ instacart %>%
   knitr::kable()
 ```
 
+
+## Problem 2
+
+First, load the `BRFSS` dataset...
+```{r}
+data("brfss_smart2010")
+```
+
+Then, clean the dataset...
+```{r}
+brfss_df = 
+  brfss_smart2010 %>% 
+  janitor::clean_names() %>% 
+  filter(
+    topic == "Overall Health", 
+    response %in% c("Poor", "Fair", "Good", "Very Good", "Excellent")
+    ) %>% 
+  mutate(response = factor(response, levels = c("Poor", "Fair", "Good", "Very Good", "Excellent"), ordered = TRUE))
+```
+
+* In 2002, which states were observed at 7 or more locations? What about in 2010?
+```{r}
+state02 = 
+  brfss_df %>% 
+  filter(year == 2002) %>% 
+  group_by(locationabbr) %>% 
+  count(locationabbr) %>% 
+  filter(n >= 7)
+
+state10 =
+  brfss_df %>% 
+  filter(year == 2010) %>% 
+  group_by(locationabbr) %>% 
+  count(locationabbr) %>% 
+  filter(n >= 7)
+```
+In 2002, the following states were observed at 7 or more locations: `r unique(pull(state02, locationabbr))`.
+
+And in 2010 it was these states: `r unique(pull(state10, locationabbr))`
+
+* Construct a dataset that is limited to Excellent responses, and contains, year, state, and a variable that averages the data_value across locations within a state. Make a “spaghetti” plot of this average value over time within a state
+```{r, fig.width = 8, fig.asp = 1}
+excell_df =
+  brfss_df %>% 
+  filter(response == "Excellent") %>% 
+  group_by(locationabbr, year) %>% 
+  mutate(meandv = mean(data_value)) %>% 
+  select(year, locationabbr, meandv) %>% 
+  distinct(locationabbr, .keep_all = TRUE)
+
+excell_df %>% 
+  ggplot(aes(x = year, y = meandv, group = locationabbr, color = locationabbr)) +
+  geom_line()
+```
+
+
+* Make a two-panel plot showing, for the years 2006, and 2010, distribution of data_value for responses (“Poor” to “Excellent”) among locations in NY State.
+```{r}
+brfss_df %>% 
+  filter(year %in% c(2006, 2010), locationabbr == "NY") %>% 
+  ggplot(aes(x = response, y = data_value)) +
+  geom_boxplot() +
+  facet_grid(. ~ year)
+```
 
