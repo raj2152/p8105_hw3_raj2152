@@ -205,7 +205,7 @@ brfss_df %>%
   )
 ```
 
-The median values and interquartile range of the data values in each response group appear to be similar across both years.
+The median values and interquartile range of the data values in each response group appear to be similar across both years. The data values are lowest for the poor response group, followed by fair, excellent, good, and then very good being the highest. 
 
 ## Problem 3
 
