@@ -33,9 +33,31 @@ scale_fill_discrete = scale_fill_viridis_d
 data("instacart")
 ```
 
+
+### Exploring the Instacart dataset
+```{r}
+eda = instacart %>% 
+  group_by(department) %>% 
+  summarize(n_obs = n()) %>% 
+  arrange(desc(n_obs))
+
+eda %>%   
+  ggplot(aes(x = n_obs, y = department)) +
+  geom_bar(stat = "identity")
+
+eda2 = instacart %>% 
+  group_by(user_id) %>% 
+  summarize(n_obs = n())
+```
+From my brief exploration, the following departments are the most popular: produce, dairy eggs, snacks, beverages, and frozen. From my plot, the produce department appears to exceed the other departments by nearly double. Also, there are `r nrow(eda2)` user ID's in this dataset. 
+
+*Write a short description of the dataset.*
 The Instacart dataset has `r nrow(instacart)` observations and `r ncol(instacart)` variables. Each row or observation corresponds to a single product within an Instacart order, therefore, one order may map to several products (i.e., there is a one-to-many relationship between orders and products). The variables provide details on each order, including things like `order_id` and `product_id` as well as the `user_id` of who placed the order. The variables also include information on where each product is located, for example: `aisle` and `department`.
 
-There are `r length(unique(pull(instacart, aisle_id)))` aisles. The aisles with the most items ordered from are: fresh vegetables, fresh fruits, packaged vegetables fruits, yogurt, and packaged cheese. 
+
+### Popular Aisles
+*How many aisles are there, and which aisles are the most items ordered from?*
+There are `r length(unique(pull(instacart, aisle_id)))` aisles. The aisles with the most items ordered from are: fresh vegetables, fresh fruits, packaged vegetables fruits, yogurt, and packaged cheese.
 ```{r}
 aisle_df = 
   instacart %>%
@@ -53,10 +75,12 @@ aisle_df %>%
   ggplot(aes(x = quantity, y = reorder(aisle, quantity))) +
   geom_bar(stat = "identity") +
   labs(
+    title = "Number of Items Ordered in Each Aisle (>10,000)",
     x = "Number of Items Ordered",
     y = "Aisle"
   )
 ```
+
 This plot shows the number of items ordered in each aisle, limiting this to aisles with more than 10000 items ordered. The plot is in descending order based on quantity.
 
 ### Popular Items by Aisles
@@ -89,7 +113,7 @@ instacart %>%
     values_from = "order_hour_of_day",
     values_fn = mean
   ) %>% 
-  knitr::kable()
+  knitr::kable(digits = 2)
 ```
 
 
@@ -105,6 +129,7 @@ Then, clean the dataset...
 brfss_df = 
   brfss_smart2010 %>% 
   janitor::clean_names() %>% 
+  rename(state = locationabbr, location = locationdesc) %>% 
   filter(
     topic == "Overall Health", 
     response %in% c("Poor", "Fair", "Good", "Very good", "Excellent")
@@ -119,20 +144,20 @@ brfss_df =
 state02 = 
   brfss_df %>% 
   filter(year == 2002) %>% 
-  group_by(locationabbr) %>% 
-  count(locationabbr) %>% 
+  group_by(state) %>% 
+  count(state) %>% 
   filter(n >= 7)
 
 state10 =
   brfss_df %>% 
   filter(year == 2010) %>% 
-  group_by(locationabbr) %>% 
-  count(locationabbr) %>% 
+  group_by(state) %>% 
+  count(state) %>% 
   filter(n >= 7)
 ```
-In **2002**, the following states were observed at 7 or more locations: `r unique(pull(state02, locationabbr))`.
+In **2002**, there were `r nrow(state02)` states that were observed at 7 or more locations, including: `r unique(pull(state02, state))`.
 
-And in **2010** it was these states: `r unique(pull(state10, locationabbr))`
+And in **2010** there were `r nrow(state10)` states with 7 or more locations observed: `r unique(pull(state10, state))`
 
 
 ### Excellent responses
@@ -141,32 +166,40 @@ And in **2010** it was these states: `r unique(pull(state10, locationabbr))`
 excell_df =
   brfss_df %>% 
   filter(response == "Excellent") %>% 
-  group_by(locationabbr, year) %>% 
+  group_by(state, year) %>% 
   mutate(meandv = mean(data_value)) %>% 
-  select(year, locationabbr, meandv) %>% 
-  distinct(locationabbr, .keep_all = TRUE)
+  select(year, state, meandv) %>% 
+  distinct(state, .keep_all = TRUE)
 
 excell_df %>% 
-  ggplot(aes(x = year, y = meandv, group = locationabbr, color = locationabbr)) +
-  geom_line()
+  ggplot(aes(x = year, y = meandv, group = state, color = state)) +
+  geom_line() +
+  scale_color_discrete() +
+  labs(
+    title = "Average % ranking of overall health over time within each state",
+    x = "Year",
+    y = "Average % ranking of overall health"
+  )
 ```
 
+From the plot above, the mean ranking of overall health appears to hover around 20-25%.
 
 ### Distribution of data_value for Poor to Excellent in NY State
 *Make a two-panel plot showing, for the years 2006, and 2010, distribution of data_value for responses (“Poor” to “Excellent”) among locations in NY State.*
 ```{r}
 brfss_df %>% 
-  filter(year %in% c(2006, 2010), locationabbr == "NY") %>% 
+  filter(year %in% c(2006, 2010), state == "NY") %>% 
   ggplot(aes(x = response, y = data_value)) +
   geom_boxplot() +
   facet_grid(. ~ year) +
   labs(
+    title = " Distribution of Responses in NY State, 2006 and 2010",
     x = "Response",
     y = "Data Value"
   )
 ```
 
-The median values and interquartile range in each response group appear to be the similar across both years.  
+The median values and interquartile range of self-reported overall health in each response group appear to be similar across both years.
 
 ## Problem 3
 
@@ -184,7 +217,7 @@ accel_df =
   mutate(
     day_type = ifelse(day %in% c("Saturday", "Sunday"), "weekend", "weekday"),
     day_type = factor(day_type),
-    day = factor(day),
+    day = factor(day, levels = c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"), ordered = TRUE),
     minute_of_day = as.numeric(minute_of_day)
   )
 ```
@@ -207,14 +240,16 @@ agg_day_df %>%
 ```
 From this table, we see that activity tends to be lower on weekends than on weekdays.
 
+
 ### 24-hour activity for each day of the week
 *Accelerometer data allows the inspection activity over the course of the day. Make a single-panel plot that shows the 24-hour activity time courses for each day and use color to indicate day of the week. Describe in words any patterns or conclusions you can make based on this graph.*
 ```{r fig.width = 8, fig.asp = 1}
 accel_df %>% 
   ggplot(aes(x = minute_of_day, y = activity, color = day)) +
-  geom_point(alpha = .5) + 
+  geom_point(alpha = .7) + 
   geom_smooth() + 
   labs(
+    title = "24-hour Activity for Each Day of Week", 
     x = "Minute of the 24-hour day",
     y = "Activity counts"
   )
