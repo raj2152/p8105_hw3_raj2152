@@ -43,7 +43,12 @@ eda = instacart %>%
 
 eda %>%   
   ggplot(aes(x = n_obs, y = department)) +
-  geom_bar(stat = "identity")
+  geom_bar(stat = "identity") +
+  labs(
+    title = "Exploring the data", 
+    x = "Number of items ordered",
+    y = "Department"
+    )
 
 eda2 = instacart %>% 
   group_by(user_id) %>% 
@@ -162,7 +167,7 @@ And in **2010** there were `r nrow(state10)` states with 7 or more locations obs
 
 ### Excellent responses
 *Construct a dataset that is limited to Excellent responses, and contains, year, state, and a variable that averages the data_value across locations within a state. Make a “spaghetti” plot of this average value over time within a state*
-```{r, fig.width = 8, fig.asp = 1}
+```{r, fig.width = 8, fig.asp = 1, warning = FALSE}
 excell_df =
   brfss_df %>% 
   filter(response == "Excellent") %>% 
@@ -173,38 +178,39 @@ excell_df =
 
 excell_df %>% 
   ggplot(aes(x = year, y = meandv, group = state, color = state)) +
-  geom_line() +
+  geom_point(alpha = .5) +
+  geom_line(aes(group = state), alpha = .3) +
   scale_color_discrete() +
   labs(
-    title = "Average % ranking of overall health over time within each state",
+    title = "Average data value over time by state",
     x = "Year",
-    y = "Average % ranking of overall health"
+    y = "Average Data Value"
   )
 ```
 
-From the plot above, the mean ranking of overall health appears to hover around 20-25%.
+From the plot above, the average data values appear to hover around 20-25. From 2002 to 2010, there appears to be a general decrease in average data values over time. 
 
 ### Distribution of data_value for Poor to Excellent in NY State
 *Make a two-panel plot showing, for the years 2006, and 2010, distribution of data_value for responses (“Poor” to “Excellent”) among locations in NY State.*
-```{r}
+```{r fig.width = 8, fig.asp = 1}
 brfss_df %>% 
   filter(year %in% c(2006, 2010), state == "NY") %>% 
-  ggplot(aes(x = response, y = data_value)) +
+  ggplot(aes(x = response, y = data_value, color = response)) +
   geom_boxplot() +
   facet_grid(. ~ year) +
   labs(
-    title = " Distribution of Responses in NY State, 2006 and 2010",
+    title = " Distribution of data value responses in NY State, 2006 and 2010",
     x = "Response",
     y = "Data Value"
   )
 ```
 
-The median values and interquartile range of self-reported overall health in each response group appear to be similar across both years.
+The median values and interquartile range of the data values in each response group appear to be similar across both years.
 
 ## Problem 3
 
 Load and tidy the accel_data.csv dataset...
-```{r}
+```{r message = FALSE}
 accel_df = 
   read_csv("./data/accel_data.csv") %>% 
   janitor::clean_names() %>% 
@@ -243,11 +249,11 @@ From this table, we see that activity tends to be lower on weekends than on week
 
 ### 24-hour activity for each day of the week
 *Accelerometer data allows the inspection activity over the course of the day. Make a single-panel plot that shows the 24-hour activity time courses for each day and use color to indicate day of the week. Describe in words any patterns or conclusions you can make based on this graph.*
-```{r fig.width = 8, fig.asp = 1}
+```{r fig.width = 8, fig.asp = 1, message = FALSE}
 accel_df %>% 
   ggplot(aes(x = minute_of_day, y = activity, color = day)) +
-  geom_point(alpha = .7) + 
-  geom_smooth() + 
+  geom_point(alpha = .4) + 
+  geom_smooth(aes(group = day)) + 
   labs(
     title = "24-hour Activity for Each Day of Week", 
     x = "Minute of the 24-hour day",
@@ -255,4 +261,4 @@ accel_df %>%
   )
 ```
 
-From the plot, we can see that activity begins around minute 250 of the day (approx 4 am) and peaks and decreases around minute 1250 of the day (approx 8pm). The times of the day with the most activity are around minute 750 (approx 12:30pm) and between minute 1000-1250 (approx 4-8pm).
+From the plot, we can see that activity for this 63 year old male begins a little after minute 250 of the day (approx 4-5 am) and peaks and decreases around minute 1250 of the day (approx 8pm). The times of the day with the most activity are around minute 750 (approx 12:30pm) and between minute 1000-1250 (approx 4-8pm). Additionally, activity starts later in the morning on Sunday and there is more activity at night on Friday. 
