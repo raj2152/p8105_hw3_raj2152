@@ -107,9 +107,9 @@ brfss_df =
   janitor::clean_names() %>% 
   filter(
     topic == "Overall Health", 
-    response %in% c("Poor", "Fair", "Good", "Very Good", "Excellent")
+    response %in% c("Poor", "Fair", "Good", "Very good", "Excellent")
     ) %>% 
-  mutate(response = factor(response, levels = c("Poor", "Fair", "Good", "Very Good", "Excellent"), ordered = TRUE))
+  mutate(response = factor(response, levels = c("Poor", "Fair", "Good", "Very good", "Excellent"), ordered = TRUE))
 ```
 
 
@@ -166,6 +166,7 @@ brfss_df %>%
   )
 ```
 
+The median values and interquartile range in each response group appear to be the similar across both years.  
 
 ## Problem 3
 
